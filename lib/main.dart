@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,6 +18,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
+        '/dashboard': (context) => DashboardPage(),
+        '/predict': (context) => PredictPage(),
+        '/add-recipe': (context) => AddRecipePage(),
       },
     );
   }
@@ -101,6 +105,139 @@ Widget build(BuildContext context) {
     ),
   );
 }
+
+class DashboardPage extends StatelessWidget {
+  void _showQuitConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Quit App'),
+          content: Text('Are you sure you want to quit?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Future.delayed(Duration(milliseconds: 200), () {
+                  SystemNavigator.pop();
+                });
+              },
+              child: Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Dashboard'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Predict Button
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/predict');
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Predict',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(height: 20),
+            // Add Recipe Button
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/add-recipe');
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Add Recipe',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(height: 20),
+            // Quit Button
+            ElevatedButton(
+              onPressed: () {
+                _showQuitConfirmation(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Quit',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+ 
+class PredictPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Predict Page'),
+      ),
+      body: Center(
+        child: Text(
+          'This is the Predict Page',
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
+    );
+  }
+}
+ 
+class AddRecipePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Add Recipe Page'),
+      ),
+      body: Center(
+        child: Text(
+          'This is the Add Recipe Page',
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
+    );
+  }
+}
+
 class LoginPage extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
@@ -178,9 +315,7 @@ class LoginPage extends StatelessWidget {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     // Show a SnackBar while processing
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Processing Login')),
-                    );
+                    
 
                     // Construct the request body
                     final Map<String, dynamic> requestBody = {
@@ -213,6 +348,8 @@ class LoginPage extends StatelessWidget {
                           SnackBar(content: Text('Login Successful')),
                         );
 
+                        Navigator.pushReplacementNamed(context, '/dashboard');
+
                         // Navigate to next screen or perform other actions
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -235,6 +372,7 @@ class LoginPage extends StatelessWidget {
     );
   }
 }
+
 class RegisterPage extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
@@ -334,7 +472,9 @@ class RegisterPage extends StatelessWidget {
                       if (response.statusCode == 200) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Registration Successful')),
+              
                         );
+                        Navigator.pushReplacementNamed(context, '/login');
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Failed to Register: ${response.body}')),
