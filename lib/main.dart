@@ -585,116 +585,179 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register Page'),
+        backgroundColor: Colors.purple,
+        title: Text(
+          'Register',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Register',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 20),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Name is required';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Email is required';
-                  } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Enter a valid email address';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password is required';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    // Show a SnackBar while processing
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple, Colors.deepPurpleAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30),
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Create Account',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Please fill the form to register',
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                    SizedBox(height: 40),
+                    _buildTextField(
+                      controller: _nameController,
+                      label: 'Name',
+                      hint: 'Enter your name',
+                      icon: Icons.person,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hint: 'Enter your email',
+                      icon: Icons.email,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email is required';
+                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                            .hasMatch(value)) {
+                          return 'Enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      hint: 'Enter your password',
+                      icon: Icons.lock,
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Password is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 40),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Processing Registration')),
+                          );
 
-                    // Construct the request body
-                    final Map<String, dynamic> requestBody = {
-                      "email": _emailController.text,
-                      "name": _nameController.text,
-                      "password": _passwordController.text,
-                    };
+                          final requestBody = {
+                            "email": _emailController.text.trim(),
+                            "name": _nameController.text.trim(),
+                            "password": _passwordController.text,
+                          };
 
-                    try {
-                      // Send POST request
-                      final response = await http.post(
-                        Uri.parse('http://10.0.2.2:8001/signup/'),
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: jsonEncode(requestBody),
-                      );
+                          try {
+                            final response = await http.post(
+                              Uri.parse('http://10.0.2.2:8001/signup/'),
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: jsonEncode(requestBody),
+                            );
 
-                      if (response.statusCode == 200) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Registration Successful')),
-                        );
-                        Navigator.pushReplacementNamed(context, '/login');
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content:
-                                  Text('Failed to Register: ${response.body}')),
-                        );
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
-                      );
-                    }
-                  }
-                },
-                child: Text('Submit'),
+                            if (response.statusCode == 200) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Registration Successful')),
+                              );
+                              Navigator.pushReplacementNamed(context, '/login');
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Failed to Register: ${response.body}')),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.purple,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        'Register',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, color: Colors.purple),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        errorStyle: TextStyle(color: Colors.redAccent),
+      ),
+      validator: validator,
     );
   }
 }
