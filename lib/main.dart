@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 // import 'package:hive_flutter/hive_flutter.dart';
 
-void main() async {
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -139,6 +140,9 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String name =
+        ModalRoute.of(context)?.settings.arguments as String? ?? 'User';
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Dashboard'),
@@ -147,6 +151,12 @@ class DashboardPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Personalized greeting
+            Text(
+              'Hello, $name',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 40),
             // Predict Button
             ElevatedButton(
               onPressed: () {
@@ -353,7 +363,11 @@ class LoginPage extends StatelessWidget {
                           SnackBar(content: Text('Login Successful')),
                         );
 
-                        Navigator.pushReplacementNamed(context, '/dashboard');
+                        Navigator.pushReplacementNamed(
+                          context,
+                          '/dashboard',
+                          arguments: _nameController.text,
+                        );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
