@@ -563,17 +563,34 @@ class _PredictPageState extends State<PredictPage> {
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Response"),
-            content: Text(responseData.toString()),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("OK"),
-              ),
-            ],
+        final details = jsonDecode(responseData["details"]);
+
+        // Extract recipes
+        List<Map<String, dynamic>> recipes = [];
+        int count = (details["id"] as Map).length;
+
+        for (int i = 0; i < count; i++) {
+          final recipe = {
+            "id": details["id"]["$i"],
+            "title": details["title"]["$i"],
+            "ingredients": details["ingredients"]["$i"],
+            "instructions": details["instructions"]["$i"],
+            "prep_time": details["prep_time"]["$i"],
+            "cook_time": details["cook_time"]["$i"],
+            "cuisine": details["cuisine"]["$i"],
+            "course": details["course"]["$i"],
+            "diet": details["diet"]["$i"],
+            "url": details["url"]["$i"],
+            "similarity": details["similarity"]["$i"],
+          };
+          recipes.add(recipe);
+        }
+
+        // Navigate to the RecipesPage with the recipes list
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipesPage(recipes: recipes),
           ),
         );
       } else {
@@ -595,6 +612,7 @@ class _PredictPageState extends State<PredictPage> {
       );
     }
   }
+
 
   Future<void> fetchDropdownData() async {
     try {
@@ -1096,6 +1114,92 @@ class _AddRecipePageState extends State<AddRecipePage> {
                 onPressed: _submitRecipe,
                 child: Text('Submit Recipe'),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RecipesPage extends StatelessWidget {
+  final List<Map<String, dynamic>> recipes;
+
+  const RecipesPage({Key? key, required this.recipes}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Predicted Recipes"),
+      ),
+      body: ListView.builder(
+        itemCount: recipes.length,
+        itemBuilder: (context, index) {
+          final recipe = recipes[index];
+          return Card(
+            margin: EdgeInsets.all(8.0),
+            child: ListTile(
+              title: Text(recipe["title"] ?? "No Title"),
+              subtitle: Text(
+                  "Cuisine: ${recipe["cuisine"] ?? "N/A"}\nCourse: ${recipe["course"] ?? "N/A"}"),
+              onTap: () {
+                // Navigate to RecipeDetailPage when tapped
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RecipeDetailPage(recipe: recipe),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class RecipeDetailPage extends StatelessWidget {
+  
+  final Map<String, dynamic> recipe;
+
+  const RecipeDetailPage({Key? key, required this.recipe}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(recipe["title"] ?? "Recipe Details"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Title: ${recipe["title"]}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text("Cuisine: ${recipe["cuisine"] ?? "N/A"}"),
+              Text("Course: ${recipe["course"] ?? "N/A"}"),
+              Text("Diet: ${recipe["diet"] ?? "N/A"}"),
+              Text("Prep Time: ${recipe["prep_time"]} mins"),
+              Text("Cook Time: ${recipe["cook_time"]} mins"),
+              SizedBox(height: 16),
+              Text("Ingredients:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ...(recipe["ingredients"] as List<dynamic>)
+                  .map((ingredient) => Text("- $ingredient"))
+                  .toList(),
+              SizedBox(height: 16),
+              Text("Instructions:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ...(recipe["instructions"] as List<dynamic>)
+                  .map((instruction) => Text("• $instruction"))
+                  .toList(),
+              if (recipe["url"] != null) ...[
+                SizedBox(height: 16),
+                Text("Recipe URL:"),
+                Text(recipe["url"], style: TextStyle(color: Colors.blue)),
+              ],
             ],
           ),
         ),
