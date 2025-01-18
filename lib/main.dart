@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Welcome App',
+      title: 'Cooking Recipe App',
       home: MyHomePage(),
       routes: {
         '/login': (context) => LoginPage(),
@@ -37,79 +37,84 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome'),
+        backgroundColor: Colors.purple,
+        title: Text(
+          'Welcome',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Welcome to the Recipe Generator Book',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple, Colors.deepPurpleAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Welcome to the Recipe Generator Book',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
+                SizedBox(height: 40),
+                _buildHomePageButton(
+                  context,
+                  label: 'Login',
+                  icon: Icons.login,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                ),
+                SizedBox(height: 20),
+                _buildHomePageButton(
+                  context,
+                  label: 'Register',
+                  icon: Icons.app_registration,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/register');
+                  },
+                ),
+              ],
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/login');
-              },
-              child: Text('Login'),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/register');
-              },
-              child: Text('Register'),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
-}
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Welcome'),
-    ),
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Welcome to the Recipe Generator Book',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/login');
-            },
-            child: Text('Login'),
-          ),
-          SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/register');
-            },
-            child: Text('Register'),
-          ),
-        ],
+  Widget _buildHomePageButton(BuildContext context,
+      {required String label,
+      required IconData icon,
+      required VoidCallback onPressed}) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.purple,
+        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        elevation: 5,
       ),
-    ),
-  );
+      icon: Icon(icon, size: 24),
+      label: Text(
+        label,
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      onPressed: onPressed,
+    );
+  }
 }
 
 class DashboardPage extends StatelessWidget {
@@ -303,7 +308,7 @@ class DashboardPage extends StatelessWidget {
                 SizedBox(height: 30),
                 _buildDashboardButton(
                   context,
-                  label: 'Predict',
+                  label: 'Generate Recipe',
                   icon: Icons.insights,
                   onPressed: () => Navigator.pushNamed(context, '/predict'),
                 ),
@@ -373,134 +378,199 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login Page'),
+        backgroundColor: Colors.purple,
+        title: Text(
+          'Login',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Login',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple, Colors.deepPurpleAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30),
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Welcome Back!',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      'Please login to your account',
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                    SizedBox(height: 40),
+                    _buildTextField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hint: 'Enter your email',
+                      icon: Icons.email,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email is required';
+                        } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                            .hasMatch(value)) {
+                          return 'Enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _nameController,
+                      label: 'Name',
+                      hint: 'Enter your name',
+                      icon: Icons.person,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      hint: 'Enter your password',
+                      icon: Icons.lock,
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Password is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 40),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Processing Login')),
+                          );
+
+                          final requestBody = {
+                            "email": _emailController.text.trim(),
+                            "name": _nameController.text.trim(),
+                            "password": _passwordController.text,
+                            "embedding": [0],
+                          };
+
+                          try {
+                            final response = await http.post(
+                              Uri.parse('http://10.0.2.2:8001/login/'),
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              body: jsonEncode(requestBody),
+                            );
+
+                            if (response.statusCode == 200) {
+                              final responseData = jsonDecode(response.body);
+                              final accessToken = responseData['access_token'];
+
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.setString(
+                                  'access_token', accessToken);
+                              await prefs.setString(
+                                  'email', _emailController.text);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Login Successful')),
+                              );
+
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/dashboard',
+                                arguments: _nameController.text,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content:
+                                        Text('Login Failed: ${response.body}')),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.purple,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 20),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Email is required';
-                  } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Enter a valid email address';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Name is required';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password is required';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    // Show a SnackBar while processing
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Processing Login')),
-                    );
-
-                    // Construct the request body
-                    final Map<String, dynamic> requestBody = {
-                      "email": _emailController.text,
-                      "name": _nameController.text,
-                      "password": _passwordController.text,
-                      "embedding": [0], // Placeholder for embedding
-                    };
-
-                    try {
-                      // Send POST request
-                      final response = await http.post(
-                        Uri.parse('http://10.0.2.2:8001/login/'),
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: jsonEncode(requestBody),
-                      );
-
-                      if (response.statusCode == 200) {
-                        // Parse response
-                        final responseData = jsonDecode(response.body);
-                        final accessToken = responseData['access_token'];
-
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('access_token', accessToken);
-                        await prefs.setString('email', _emailController.text);
-                        // Print token
-                        print('Access Token: $accessToken');
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Login Successful')),
-                        );
-
-                        Navigator.pushReplacementNamed(
-                          context,
-                          '/dashboard',
-                          arguments: _nameController.text,
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Login Failed: ${response.body}')),
-                        );
-                      }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
-                      );
-                    }
-                  }
-                },
-                child: Text('Submit'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          controller: controller,
+          obscureText: obscureText,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            labelText: label,
+            hintText: hint,
+            prefixIcon: Icon(icon, color: Colors.purple),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            errorStyle: TextStyle(color: Colors.redAccent),
+          ),
+          validator: validator,
+        ),
+      ],
     );
   }
 }
