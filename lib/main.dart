@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'dart:math';
-
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -142,6 +142,129 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
+  void _showReviewDialog(BuildContext context) {
+    final TextEditingController _reviewController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        int _selectedRating = 0;
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              title: Text(
+                'Review App',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Rate your experience:'),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          Icons.star,
+                          color: index < _selectedRating
+                              ? Colors.amber
+                              : Colors.grey,
+                          size: 30,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _selectedRating = index + 1;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    controller: _reviewController,
+                    decoration: InputDecoration(
+                      labelText: 'Comment',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    final token = prefs.getString('access_token');
+
+                    if (token == null || token.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Authorization token is missing. Please log in again.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final email =
+                        prefs.getString('user_email') ?? 'user@example.com';
+                    final now = DateTime.now().toIso8601String();
+
+                    final reviewData = {
+                      "content": _reviewController.text.trim(),
+                      "created_at": now,
+                    };
+
+                    try {
+                      final response = await http.post(
+                        Uri.parse(
+                            'http://10.0.2.2:8001/save-review/?email=$email'),
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Authorization": "Bearer $token",
+                        },
+                        body: jsonEncode(reviewData),
+                      );
+
+                      if (response.statusCode == 200) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text('Review submitted successfully!')),
+                        );
+                        Navigator.of(context).pop(); // Close the dialog
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Failed to submit review: ${response.body}')),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  },
+                  child: Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final String name =
@@ -149,71 +272,92 @@ class DashboardPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Personalized greeting
-            Text(
-              'Hello, $name',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 40),
-            // Predict Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/predict');
-              },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                'Predict',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(height: 20),
-            // Add Recipe Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/add-recipe');
-              },
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                'Add Recipe',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(height: 20),
-            // Quit Button
-            ElevatedButton(
-              onPressed: () {
-                _showQuitConfirmation(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                'Quit',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+        backgroundColor: Colors.purple,
+        title: Text(
+          'Dashboard',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        elevation: 0,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple, Colors.deepPurpleAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Welcome, $name!',
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                ),
+                SizedBox(height: 30),
+                _buildDashboardButton(
+                  context,
+                  label: 'Predict',
+                  icon: Icons.insights,
+                  onPressed: () => Navigator.pushNamed(context, '/predict'),
+                ),
+                _buildDashboardButton(
+                  context,
+                  label: 'Add Recipe',
+                  icon: Icons.add_circle,
+                  onPressed: () => Navigator.pushNamed(context, '/add-recipe'),
+                ),
+                _buildDashboardButton(
+                  context,
+                  label: 'Review App',
+                  icon: Icons.feedback,
+                  onPressed: () => _showReviewDialog(context),
+                ),
+                _buildDashboardButton(
+                  context,
+                  label: 'Quit',
+                  icon: Icons.exit_to_app,
+                  color: Colors.red,
+                  onPressed: () => _showQuitConfirmation(context),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardButton(BuildContext context,
+      {required String label,
+      required IconData icon,
+      required VoidCallback onPressed,
+      Color color = Colors.white}) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 20),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        leading: Icon(icon,
+            size: 30, color: color == Colors.white ? Colors.purple : color),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color == Colors.white ? Colors.black : color,
+          ),
+        ),
+        onTap: onPressed,
       ),
     );
   }
@@ -485,7 +629,6 @@ class RegisterPage extends StatelessWidget {
   }
 }
 
-
 class PredictPage extends StatefulWidget {
   @override
   _PredictPageState createState() => _PredictPageState();
@@ -550,7 +693,8 @@ class _PredictPageState extends State<PredictPage> {
       "selected_cuisines": selectedCuisines.toList(), // Convert Set to List
       "selected_courses": selectedCourses.toList(), // Convert Set to List
       "selected_diets": selectedDiets.toList(), // Convert Set to List
-      "selected_ingredients": selectedIngredients.toList(), // Convert Set to List
+      "selected_ingredients":
+          selectedIngredients.toList(), // Convert Set to List
       "image": "",
     };
 
@@ -613,10 +757,10 @@ class _PredictPageState extends State<PredictPage> {
     }
   }
 
-
   Future<void> fetchDropdownData() async {
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:8001/dropdown-data/'));
+      final response =
+          await http.get(Uri.parse('http://10.0.2.2:8001/dropdown-data/'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -661,7 +805,8 @@ class _PredictPageState extends State<PredictPage> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             GestureDetector(
               onTap: () {
                 setState(() {
@@ -685,7 +830,9 @@ class _PredictPageState extends State<PredictPage> {
                       "DropDown $label",
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
-                    Icon(isDropdownOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down),
+                    Icon(isDropdownOpen
+                        ? Icons.arrow_drop_up
+                        : Icons.arrow_drop_down),
                   ],
                 ),
               ),
@@ -706,8 +853,9 @@ class _PredictPageState extends State<PredictPage> {
                     onChanged: (value) {
                       setState(() {
                         filteredItems = items
-                            .where((item) =>
-                                item.toLowerCase().contains(value.toLowerCase()))
+                            .where((item) => item
+                                .toLowerCase()
+                                .contains(value.toLowerCase()))
                             .toList();
                       });
                     },
@@ -727,7 +875,8 @@ class _PredictPageState extends State<PredictPage> {
                             item,
                             style: TextStyle(fontSize: 16),
                           ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                           onTap: () {
                             setState(() {
                               selectedItems.add(item); // Ensure adding to Set
@@ -768,7 +917,8 @@ class _PredictPageState extends State<PredictPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: isLoading
-            ? Center(child: CircularProgressIndicator()) // Show loading indicator
+            ? Center(
+                child: CircularProgressIndicator()) // Show loading indicator
             : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,10 +936,13 @@ class _PredictPageState extends State<PredictPage> {
                       decoration: InputDecoration(labelText: 'Cook Time'),
                     ),
                     SizedBox(height: 20),
-                    buildSearchableDropdown("Cuisines", cuisines, selectedCuisines),
-                    buildSearchableDropdown("Courses", courses, selectedCourses),
+                    buildSearchableDropdown(
+                        "Cuisines", cuisines, selectedCuisines),
+                    buildSearchableDropdown(
+                        "Courses", courses, selectedCourses),
                     buildSearchableDropdown("Diets", diets, selectedDiets),
-                    buildSearchableDropdown("Ingredients", ingredients, selectedIngredients),
+                    buildSearchableDropdown(
+                        "Ingredients", ingredients, selectedIngredients),
                     SizedBox(height: 20),
                     Center(
                       child: ElevatedButton(
@@ -893,7 +1046,7 @@ class _AddRecipePageState extends State<AddRecipePage> {
     newId = random.nextInt(1000000);
     if (_formKey.currentState!.validate() && !_instructionError) {
       final recipeData = {
-        "id": newId, 
+        "id": newId,
         "title": _titleController.text,
         "ingredients": _selectedIngredients,
         "instructions": _instructions,
@@ -1127,41 +1280,172 @@ class RecipesPage extends StatelessWidget {
 
   const RecipesPage({Key? key, required this.recipes}) : super(key: key);
 
+  Future<void> _submitFeedback(
+      BuildContext context, String comment, double rating) async {
+    try {
+      // Retrieve user email (stored during login)
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token') ?? '';
+      final email = prefs.getString('user_email') ??
+          'user@example.com'; // Replace with actual email retrieval
+
+      if (token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text("Authorization token is missing. Please log in again.")),
+        );
+        return;
+      }
+
+      // Gather feedback data
+      final feedbackData = {
+        "email": email,
+        "input_description": "Predicted Recipes",
+        "input_image": "", // Empty for now
+        "recipe_ids": recipes.map((recipe) => recipe["id"]).toList(),
+        "rating": rating.toInt(),
+        "comment": comment,
+        "created_at": DateTime.now().toIso8601String(),
+      };
+
+      // Send POST request
+      final response = await http.post(
+        Uri.parse("http://10.0.2.2:8001/submit-feedback/"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token", // Include token
+        },
+        body: jsonEncode(feedbackData),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Feedback submitted successfully!")),
+        );
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text("Failed to submit feedback: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  void _openFeedbackDialog(BuildContext context) {
+    final TextEditingController commentController = TextEditingController();
+    double selectedRating = 0;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Submit Feedback"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Rate your experience:"),
+            RatingBar.builder(
+              initialRating: 0,
+              minRating: 1,
+              direction: Axis.horizontal,
+              allowHalfRating: false,
+              itemCount: 5,
+              itemBuilder: (context, _) => Icon(
+                Icons.star,
+                color: Colors.amber,
+              ),
+              onRatingUpdate: (rating) {
+                selectedRating = rating;
+              },
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: commentController,
+              decoration: InputDecoration(
+                labelText: "Comment",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (selectedRating > 0 && commentController.text.isNotEmpty) {
+                _submitFeedback(
+                    context, commentController.text, selectedRating);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text("Please provide a rating and comment")),
+                );
+              }
+            },
+            child: Text("Submit"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Predicted Recipes"),
       ),
-      body: ListView.builder(
-        itemCount: recipes.length,
-        itemBuilder: (context, index) {
-          final recipe = recipes[index];
-          return Card(
-            margin: EdgeInsets.all(8.0),
-            child: ListTile(
-              title: Text(recipe["title"] ?? "No Title"),
-              subtitle: Text(
-                  "Cuisine: ${recipe["cuisine"] ?? "N/A"}\nCourse: ${recipe["course"] ?? "N/A"}"),
-              onTap: () {
-                // Navigate to RecipeDetailPage when tapped
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RecipeDetailPage(recipe: recipe),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: recipes.length,
+              itemBuilder: (context, index) {
+                final recipe = recipes[index];
+                return Card(
+                  margin: EdgeInsets.all(8.0),
+                  child: ListTile(
+                    title: Text(recipe["title"] ?? "No Title"),
+                    subtitle: Text(
+                        "Cuisine: ${recipe["cuisine"] ?? "N/A"}\nCourse: ${recipe["course"] ?? "N/A"}"),
+                    onTap: () {
+                      // Navigate to RecipeDetailPage when tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              RecipeDetailPage(recipe: recipe),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () => _openFeedbackDialog(context),
+              child: Text("Submit Feedback"),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class RecipeDetailPage extends StatelessWidget {
-  
   final Map<String, dynamic> recipe;
 
   const RecipeDetailPage({Key? key, required this.recipe}) : super(key: key);
@@ -1178,7 +1462,8 @@ class RecipeDetailPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Title: ${recipe["title"]}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text("Title: ${recipe["title"]}",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text("Cuisine: ${recipe["cuisine"] ?? "N/A"}"),
               Text("Course: ${recipe["course"] ?? "N/A"}"),
@@ -1186,12 +1471,14 @@ class RecipeDetailPage extends StatelessWidget {
               Text("Prep Time: ${recipe["prep_time"]} mins"),
               Text("Cook Time: ${recipe["cook_time"]} mins"),
               SizedBox(height: 16),
-              Text("Ingredients:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text("Ingredients:",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ...(recipe["ingredients"] as List<dynamic>)
                   .map((ingredient) => Text("- $ingredient"))
                   .toList(),
               SizedBox(height: 16),
-              Text("Instructions:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text("Instructions:",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ...(recipe["instructions"] as List<dynamic>)
                   .map((instruction) => Text("• $instruction"))
                   .toList(),
