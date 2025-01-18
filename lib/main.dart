@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+// import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  await Hive.openBox('authBox');
   runApp(MyApp());
 }
 
@@ -142,9 +139,6 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String name =
-        ModalRoute.of(context)?.settings.arguments as String? ?? 'User';
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Dashboard'),
@@ -153,12 +147,6 @@ class DashboardPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Personalized greeting
-            Text(
-              'Hello, $name',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 40),
             // Predict Button
             ElevatedButton(
               onPressed: () {
@@ -355,9 +343,8 @@ class LoginPage extends StatelessWidget {
                         final responseData = jsonDecode(response.body);
                         final accessToken = responseData['access_token'];
 
-                        // Save token in Hive
-                        final authBox = Hive.box('authBox');
-                        await authBox.put('accessToken', accessToken);
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('access_token', accessToken);
 
                         // Print token
                         print('Access Token: $accessToken');
@@ -366,11 +353,7 @@ class LoginPage extends StatelessWidget {
                           SnackBar(content: Text('Login Successful')),
                         );
 
-                        Navigator.pushReplacementNamed(
-                          context,
-                          '/dashboard',
-                          arguments: _nameController.text,
-                        );
+                        Navigator.pushReplacementNamed(context, '/dashboard');
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -470,6 +453,9 @@ class RegisterPage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
+                    // Show a SnackBar while processing
+
+                    // Construct the request body
                     final Map<String, dynamic> requestBody = {
                       "email": _emailController.text,
                       "name": _nameController.text,
