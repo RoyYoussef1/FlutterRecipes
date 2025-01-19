@@ -8,6 +8,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'dart:math';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -128,7 +129,7 @@ class DashboardPage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: Text('No'),
             ),
@@ -158,15 +159,29 @@ class DashboardPage extends StatelessWidget {
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              title: Text(
-                'Review App',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: Colors.white,
+              title: Center(
+                child: Text(
+                  'We value your feedback!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: Colors.deepPurple,
+                  ),
+                ),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Rate your experience:'),
+                  Text(
+                    'Rate your experience',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                  ),
                   SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -176,8 +191,8 @@ class DashboardPage extends StatelessWidget {
                           Icons.star,
                           color: index < _selectedRating
                               ? Colors.amber
-                              : Colors.grey,
-                          size: 30,
+                              : Colors.grey[300],
+                          size: 32,
                         ),
                         onPressed: () {
                           setState(() {
@@ -191,22 +206,42 @@ class DashboardPage extends StatelessWidget {
                   TextField(
                     controller: _reviewController,
                     decoration: InputDecoration(
-                      labelText: 'Comment',
+                      labelText: 'Write your feedback',
+                      labelStyle: TextStyle(color: Colors.deepPurple),
+                      filled: true,
+                      fillColor: Colors.grey[100],
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.deepPurple),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.deepPurple),
+                      ),
                     ),
                     maxLines: 3,
                   ),
                 ],
               ),
+              actionsAlignment: MainAxisAlignment.center,
               actions: [
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('Cancel'),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () async {
                     final prefs = await SharedPreferences.getInstance();
                     final token = prefs.getString('access_token');
@@ -215,7 +250,8 @@ class DashboardPage extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              'Authorization token is missing. Please log in again.'),
+                            'Authorization token is missing. Please log in again.',
+                          ),
                         ),
                       );
                       return;
@@ -244,23 +280,31 @@ class DashboardPage extends StatelessWidget {
                       if (response.statusCode == 200) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text('Review submitted successfully!')),
+                            content: Text('Review submitted successfully!'),
+                          ),
                         );
                         Navigator.of(context).pop(); // Close the dialog
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                              content: Text(
-                                  'Failed to submit review: ${response.body}')),
+                            content: Text(
+                              'Failed to submit review: ${response.body}',
+                            ),
+                          ),
                         );
                       }
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
+                        SnackBar(
+                          content: Text('Error: $e'),
+                        ),
                       );
                     }
                   },
-                  child: Text('Submit'),
+                  child: Text(
+                    'Submit',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -1416,11 +1460,9 @@ class RecipesPage extends StatelessWidget {
   Future<void> _submitFeedback(
       BuildContext context, String comment, double rating) async {
     try {
-      // Retrieve user email (stored during login)
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('access_token') ?? '';
-      final email = prefs.getString('user_email') ??
-          'user@example.com'; // Replace with actual email retrieval
+      final email = prefs.getString('user_email') ?? 'user@example.com';
 
       if (token.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1431,23 +1473,21 @@ class RecipesPage extends StatelessWidget {
         return;
       }
 
-      // Gather feedback data
       final feedbackData = {
         "email": email,
         "input_description": "Predicted Recipes",
-        "input_image": "", // Empty for now
+        "input_image": "",
         "recipe_ids": recipes.map((recipe) => recipe["id"]).toList(),
         "rating": rating.toInt(),
         "comment": comment,
         "created_at": DateTime.now().toIso8601String(),
       };
 
-      // Send POST request
       final response = await http.post(
         Uri.parse("http://10.0.2.2:8001/submit-feedback/"),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer $token", // Include token
+          "Authorization": "Bearer $token",
         },
         body: jsonEncode(feedbackData),
       );
@@ -1477,11 +1517,25 @@ class RecipesPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Submit Feedback"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Center(
+          child: Text(
+            "We value your feedback!",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: Colors.deepPurple,
+            ),
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("Rate your experience:"),
+            Text(
+              "Rate your experience:",
+              style: TextStyle(fontSize: 16, color: Colors.black87),
+            ),
+            SizedBox(height: 10),
             RatingBar.builder(
               initialRating: 0,
               minRating: 1,
@@ -1500,19 +1554,40 @@ class RecipesPage extends StatelessWidget {
             TextField(
               controller: commentController,
               decoration: InputDecoration(
-                labelText: "Comment",
-                border: OutlineInputBorder(),
+                labelText: "Write your feedback",
+                labelStyle: TextStyle(color: Colors.deepPurple),
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.deepPurple),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.deepPurple),
+                ),
               ),
               maxLines: 3,
             ),
           ],
         ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: Text(
+              "Cancel",
+              style: TextStyle(color: Colors.red, fontSize: 16),
+            ),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             onPressed: () {
               if (selectedRating > 0 && commentController.text.isNotEmpty) {
                 _submitFeedback(
@@ -1520,11 +1595,15 @@ class RecipesPage extends StatelessWidget {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text("Please provide a rating and comment")),
+                    content: Text("Please provide a rating and comment"),
+                  ),
                 );
               }
             },
-            child: Text("Submit"),
+            child: Text(
+              "Submit",
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
           ),
         ],
       ),
@@ -1535,44 +1614,90 @@ class RecipesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Predicted Recipes"),
+        backgroundColor: Colors.purple,
+        title: Text(
+          "Predicted Recipes",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: recipes.length,
-              itemBuilder: (context, index) {
-                final recipe = recipes[index];
-                return Card(
-                  margin: EdgeInsets.all(8.0),
-                  child: ListTile(
-                    title: Text(recipe["title"] ?? "No Title"),
-                    subtitle: Text(
-                        "Cuisine: ${recipe["cuisine"] ?? "N/A"}\nCourse: ${recipe["course"] ?? "N/A"}"),
-                    onTap: () {
-                      // Navigate to RecipeDetailPage when tapped
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              RecipeDetailPage(recipe: recipe),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple, Colors.deepPurpleAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                itemCount: recipes.length,
+                itemBuilder: (context, index) {
+                  final recipe = recipes[index];
+                  return Card(
+                    margin: EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                      title: Text(
+                        recipe["title"] ?? "No Title",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
                         ),
-                      );
-                    },
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          "Cuisine: ${recipe["cuisine"] ?? "N/A"}\nCourse: ${recipe["course"] ?? "N/A"}",
+                          style:
+                              TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        ),
+                      ),
+                      trailing: Icon(Icons.arrow_forward, color: Colors.purple),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                RecipeDetailPage(recipe: recipe),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () => _openFeedbackDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.purple,
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                );
-              },
+                ),
+                child: Text(
+                  "Submit Feedback",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () => _openFeedbackDialog(context),
-              child: Text("Submit Feedback"),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1587,43 +1712,161 @@ class RecipeDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(recipe["title"] ?? "Recipe Details"),
+        backgroundColor: Colors.purple,
+        title: Text(
+          recipe["title"] ?? "Recipe Details",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple, Colors.deepPurpleAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Title: ${recipe["title"]}",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text("Cuisine: ${recipe["cuisine"] ?? "N/A"}"),
-              Text("Course: ${recipe["course"] ?? "N/A"}"),
-              Text("Diet: ${recipe["diet"] ?? "N/A"}"),
-              Text("Prep Time: ${recipe["prep_time"]} mins"),
-              Text("Cook Time: ${recipe["cook_time"]} mins"),
-              SizedBox(height: 16),
-              Text("Ingredients:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ...(recipe["ingredients"] as List<dynamic>)
-                  .map((ingredient) => Text("- $ingredient"))
-                  .toList(),
-              SizedBox(height: 16),
-              Text("Instructions:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ...(recipe["instructions"] as List<dynamic>)
-                  .map((instruction) => Text("• $instruction"))
-                  .toList(),
-              if (recipe["url"] != null) ...[
-                SizedBox(height: 16),
-                Text("Recipe URL:"),
-                Text(recipe["url"], style: TextStyle(color: Colors.blue)),
-              ],
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 4,
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Recipe Title
+                    Center(
+                      child: Text(
+                        recipe["title"] ?? "Recipe Details",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Divider(thickness: 1, color: Colors.grey[300]),
+                    SizedBox(height: 10),
+
+                    // Recipe Info Section
+                    Text(
+                      "Details:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildInfoRow("Cuisine", recipe["cuisine"] ?? "N/A"),
+                    _buildInfoRow("Course", recipe["course"] ?? "N/A"),
+                    _buildInfoRow("Diet", recipe["diet"] ?? "N/A"),
+                    _buildInfoRow("Prep Time", "${recipe["prep_time"]} mins"),
+                    _buildInfoRow("Cook Time", "${recipe["cook_time"]} mins"),
+                    SizedBox(height: 16),
+
+                    // Ingredients Section
+                    Text(
+                      "Ingredients:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildList(recipe["ingredients"] as List<dynamic>, "• "),
+                    SizedBox(height: 16),
+
+                    // Instructions Section
+                    Text(
+                      "Instructions:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    _buildList(recipe["instructions"] as List<dynamic>, "• "),
+                    SizedBox(height: 16),
+
+                    // Recipe URL Section
+                    if (recipe["url"] != null) ...[
+                      Text(
+                        "Recipe URL:",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () {
+                          // Handle URL tap (e.g., launch in browser)
+                          launch(recipe["url"]);
+                        },
+                        child: Text(
+                          recipe["url"],
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        children: [
+          Text(
+            "$label:",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.purple,
+            ),
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildList(List<dynamic> items, String bullet) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items
+          .map((item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Text(
+                  "$bullet $item",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ))
+          .toList(),
     );
   }
 }
