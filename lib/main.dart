@@ -867,11 +867,11 @@ class _PredictPageState extends State<PredictPage> {
       "title_text": titleController.text,
       "prep_time": prepTimeController.text,
       "cook_time": cookTimeController.text,
-      "selected_cuisines": selectedCuisines.toList(), // Convert Set to List
-      "selected_courses": selectedCourses.toList(), // Convert Set to List
-      "selected_diets": selectedDiets.toList(), // Convert Set to List
+      "selected_cuisines": selectedCuisines.toList(), 
+      "selected_courses": selectedCourses.toList(), 
+      "selected_diets": selectedDiets.toList(),
       "selected_ingredients":
-          selectedIngredients.toList(), // Convert Set to List
+          selectedIngredients.toList(), 
       "image": "",
     };
 
@@ -907,7 +907,6 @@ class _PredictPageState extends State<PredictPage> {
           recipes.add(recipe);
         }
 
-        // Navigate to the RecipesPage with the recipes list
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -946,14 +945,14 @@ class _PredictPageState extends State<PredictPage> {
           courses = List<String>.from(data['courses']);
           diets = List<String>.from(data['diets']);
           ingredients = List<String>.from(data['ingredients']);
-          isLoading = false; // Data loading complete
+          isLoading = false; 
         });
       } else {
         throw Exception('Failed to load dropdown data');
       }
     } catch (e) {
       setState(() {
-        isLoading = false; // Stop loading even on error
+        isLoading = false; 
       });
       showDialog(
         context: context,
@@ -1095,7 +1094,7 @@ class _PredictPageState extends State<PredictPage> {
         padding: const EdgeInsets.all(16.0),
         child: isLoading
             ? Center(
-                child: CircularProgressIndicator()) // Show loading indicator
+                child: CircularProgressIndicator()) 
             : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1143,7 +1142,6 @@ class AddRecipePage extends StatefulWidget {
 class _AddRecipePageState extends State<AddRecipePage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers for other fields
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _prepTimeController = TextEditingController();
   final TextEditingController _cookTimeController = TextEditingController();
@@ -1151,13 +1149,11 @@ class _AddRecipePageState extends State<AddRecipePage> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _instructionController = TextEditingController();
 
-  // Dropdown data
   List<String> _cuisines = [];
   List<String> _courses = [];
   List<String> _diets = [];
   List<String> _ingredients = [];
 
-  // Selected values
   List<String> _selectedCuisines = [];
   List<String> _selectedCourses = [];
   List<String> _selectedDiets = [];
@@ -1239,7 +1235,6 @@ class _AddRecipePageState extends State<AddRecipePage> {
       };
 
       try {
-        // Retrieve token
         final prefs = await SharedPreferences.getInstance();
         final token = prefs.getString('access_token');
 
@@ -1252,7 +1247,6 @@ class _AddRecipePageState extends State<AddRecipePage> {
           return;
         }
 
-        // Make POST request
         final response = await http.post(
           Uri.parse('http://10.0.2.2:8001/add-recipe/'),
           headers: {
@@ -1267,17 +1261,15 @@ class _AddRecipePageState extends State<AddRecipePage> {
             SnackBar(content: Text('Recipe added successfully!')),
           );
 
-          // Reset fields and selected items
           _formKey.currentState!.reset();
           setState(() {
             _selectedCuisines.clear();
             _selectedCourses.clear();
             _selectedDiets.clear();
             _selectedIngredients.clear();
-            _instructions.clear(); // Clear instructions
+            _instructions.clear();
           });
 
-          // Navigate back to the dashboard
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1741,7 +1733,6 @@ class RecipeDetailPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Recipe Title
                     Center(
                       child: Text(
                         recipe["title"] ?? "Recipe Details",
@@ -1756,7 +1747,6 @@ class RecipeDetailPage extends StatelessWidget {
                     Divider(thickness: 1, color: Colors.grey[300]),
                     SizedBox(height: 10),
 
-                    // Recipe Info Section
                     Text(
                       "Details:",
                       style: TextStyle(
@@ -1772,7 +1762,6 @@ class RecipeDetailPage extends StatelessWidget {
                     _buildInfoRow("Cook Time", "${recipe["cook_time"]} mins"),
                     SizedBox(height: 16),
 
-                    // Ingredients Section
                     Text(
                       "Ingredients:",
                       style: TextStyle(
@@ -1784,7 +1773,6 @@ class RecipeDetailPage extends StatelessWidget {
                     _buildList(recipe["ingredients"] as List<dynamic>, "• "),
                     SizedBox(height: 16),
 
-                    // Instructions Section
                     Text(
                       "Instructions:",
                       style: TextStyle(
@@ -1796,7 +1784,6 @@ class RecipeDetailPage extends StatelessWidget {
                     _buildList(recipe["instructions"] as List<dynamic>, "• "),
                     SizedBox(height: 16),
 
-                    // Recipe URL Section
                     if (recipe["url"] != null) ...[
                       Text(
                         "Recipe URL:",
@@ -1808,7 +1795,6 @@ class RecipeDetailPage extends StatelessWidget {
                       SizedBox(height: 8),
                       GestureDetector(
                         onTap: () {
-                          // Handle URL tap (e.g., launch in browser)
                           launch(recipe["url"]);
                         },
                         child: Text(
